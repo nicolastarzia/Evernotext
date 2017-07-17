@@ -45,6 +45,13 @@ namespace Evernotext.Controllers
                 if (string.IsNullOrEmpty(f) || f != "y")
                     content = transcodedContent.ExtractedContent;
 
+            var posHead = content.IndexOf("<head");
+            if (posHead > 0)
+            {
+                var endHead = content.IndexOf('>', posHead)+1;
+                content = content.Insert(endHead, string.Format("<base href='{0}' />", q));
+            } // Fix relative path error
+
                 if (!string.IsNullOrEmpty(e))
                     await SendMailAsync(e, transcodedContent.ExtractedTitle, content, q);
 
@@ -61,6 +68,8 @@ namespace Evernotext.Controllers
             myMessage.AddTo(e);
             myMessage.From = new EmailAddress(_appSettings.EmailFrom, _appSettings.NameEmailFrom);
             myMessage.Subject = title;
+
+
             myMessage.HtmlContent = body;
             if (!string.IsNullOrEmpty(url))
             {
