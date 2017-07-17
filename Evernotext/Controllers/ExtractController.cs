@@ -24,7 +24,7 @@ namespace Evernotext.Controllers
 
         [Produces("text/html")]
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string q, [FromQuery] string e)
+        public async Task<IActionResult> Get([FromQuery] string q, [FromQuery] string e, [FromQuery] string f)
         {
             var transcoder = new NReadabilityTranscoder();
             string content;
@@ -38,27 +38,30 @@ namespace Evernotext.Controllers
                 {
                     content = wc.DownloadString(q);
                 }
-                
+
                 var transcodedContent =
                   transcoder.Transcode(new TranscodingInput(content));
 
-                if (!string.IsNullOrEmpty(e))
-                    await SendMailAsync(e, transcodedContent, q);
+                if (string.IsNullOrEmpty(f) || f != "y")
+                    content = transcodedContent.ExtractedContent;
 
-                return Ok(transcodedContent.ExtractedContent);
+                if (!string.IsNullOrEmpty(e))
+                    await SendMailAsync(e, transcodedContent.ExtractedTitle, content, q);
+
+                return Ok(content);
             }catch(Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
-        private async Task SendMailAsync(string e, TranscodingResult transc, string url="")
+        private async Task SendMailAsync(string e, string title, string body, string url="")
         {
             SendGridMessage myMessage = new SendGridMessage();
             myMessage.AddTo(e);
             myMessage.From = new EmailAddress(_appSettings.EmailFrom, _appSettings.NameEmailFrom);
-            myMessage.Subject = transc.ExtractedTitle;
-            myMessage.HtmlContent = transc.ExtractedContent;
+            myMessage.Subject = title;
+            myMessage.HtmlContent = body;
             if (!string.IsNullOrEmpty(url))
             {
                 myMessage.Subject += " " + url;
