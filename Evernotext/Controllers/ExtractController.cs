@@ -9,6 +9,7 @@ using System.Net;
 using Microsoft.Extensions.Options;
 using SendGrid.Helpers.Mail;
 using System.Net.Mail;
+using System.Text;
 
 namespace Evernotext.Controllers
 {
@@ -36,6 +37,7 @@ namespace Evernotext.Controllers
             {
                 using (var wc = new WebClient())
                 {
+                    wc.Encoding = Encoding.UTF8;
                     content = wc.DownloadString(q);
                 }
 
